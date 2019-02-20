@@ -1,6 +1,7 @@
 #!/bin/bash -eux
 
 BUILD_DIR=build
+BIN_DIR=bin
 TUN2SOCKS_FRAMEWORK=Tun2socks.framework
 
 rm -rf $BUILD_DIR
@@ -16,3 +17,5 @@ pushd > /dev/null
 
 # Add Info.plist
 cp Info.plist $BUILD_DIR/$TUN2SOCKS_FRAMEWORK/
+
+cp -R $BUILD_DIR/$TUN2SOCKS_FRAMEWORK $BIN_DIR/
