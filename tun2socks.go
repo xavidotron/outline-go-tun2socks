@@ -1,13 +1,13 @@
 package tun2socks
 
 import (
+	"os"
 	"runtime/debug"
 	"time"
 
 	"github.com/eycorsican/go-tun2socks/core"
 	"github.com/eycorsican/go-tun2socks/proxy"
 
-	// "github.com/eycorsican/go-tun2socks/proxy/shadowsocks"
 	"github.com/eycorsican/go-tun2socks/proxy/socks"
 )
 
@@ -18,17 +18,23 @@ type PacketFlow interface {
 var lwipStack core.LWIPStack
 
 func init() {
-	debug.SetGCPercent(20)
-	ticker := time.NewTicker(time.Minute * 1)
-	go func() {
-		for _ = range ticker.C {
-			debug.FreeOSMemory()
-		}
-	}()
+	// Conserve memory in iOS by increasing garbage collection frequency and
+	// returning memory to the OS every minute.
+	if os.Getenv("GOOS") == "darwin" {
+		debug.SetGCPercent(20)
+		ticker := time.NewTicker(time.Minute * 1)
+		go func() {
+			for _ = range ticker.C {
+				debug.FreeOSMemory()
+			}
+		}()
+	}
 }
 
 func InputPacket(data []byte) {
-	lwipStack.Write(data)
+	if lwipStack != nil {
+		lwipStack.Write(data)
+	}
 }
 
 func StartSocks(packetFlow PacketFlow, proxyHost string, proxyPort int) {
@@ -43,14 +49,8 @@ func StartSocks(packetFlow PacketFlow, proxyHost string, proxyPort int) {
 	}
 }
 
-// func StartShadowsocks(packetFlow PacketFlow, proxyHost string, proxyPort int, proxyCipher, proxyPassword string) {
-// 	if packetFlow != nil {
-// 		lwipStack = core.NewLWIPStack()
-// 		core.RegisterTCPConnectionHandler(shadowsocks.NewTCPHandler(core.ParseTCPAddr(proxyHost, uint16(proxyPort)).String(), proxyCipher, proxyPassword))
-// 		core.RegisterUDPConnectionHandler(shadowsocks.NewUDPHandler(core.ParseUDPAddr(proxyHost, uint16(proxyPort)).String(), proxyCipher, proxyPassword, 30*time.Second))
-// 		core.RegisterOutputFn(func(data []byte) (int, error) {
-// 			packetFlow.WritePacket(data)
-// 			return len(data), nil
-// 		})
-// 	}
-// }
+func StopSocks() {
+	if lwipStack != nil {
+		lwipStack.Close()
+	}
+}
