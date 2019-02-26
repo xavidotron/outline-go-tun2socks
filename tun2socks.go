@@ -1,7 +1,6 @@
 package tun2socks
 
 import (
-	"os"
 	"runtime/debug"
 	"time"
 
@@ -18,17 +17,15 @@ type PacketFlow interface {
 var lwipStack core.LWIPStack
 
 func init() {
-	// Conserve memory in iOS by increasing garbage collection frequency and
+	// Conserve memory by increasing garbage collection frequency and
 	// returning memory to the OS every minute.
-	if os.Getenv("GOOS") == "darwin" {
-		debug.SetGCPercent(20)
-		ticker := time.NewTicker(time.Minute * 1)
-		go func() {
-			for _ = range ticker.C {
-				debug.FreeOSMemory()
-			}
-		}()
-	}
+	debug.SetGCPercent(10)
+	ticker := time.NewTicker(time.Minute * 1)
+	go func() {
+		for _ = range ticker.C {
+			debug.FreeOSMemory()
+		}
+	}()
 }
 
 func InputPacket(data []byte) {
