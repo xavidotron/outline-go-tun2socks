@@ -1,6 +1,6 @@
 # go-tun2socks-mobile
 
-Demo for building and using `go-tun2socks` as a library on iOS and Android.
+Go package for building and using `go-tun2socks` as a library on iOS and Android.
 
 ## Prerequisites
 
@@ -12,9 +12,9 @@ Demo for building and using `go-tun2socks` as a library on iOS and Android.
 - gomobile (https://github.com/golang/go/wiki/Mobile)
 - Other common utilities (e.g.: git)
 
-## Golang Runtime
+## iOS Golang Runtime
 
-We use a custom Golang runtime to build the iOS framework built of Go 1.12. The [patch](https://go-review.googlesource.com/c/go/+/159117)improves memory reporting to the OS. This should not be necessary after Go 1.13 is released (scheduled for August 2019).
+We use a custom Golang runtime to build the iOS framework built of Go 1.12. The [patch](https://go-review.googlesource.com/c/go/+/159117) improves memory reporting to the OS. This should not be necessary after Go 1.13 is released (scheduled for August 2019).
 
 ```bash
 # We assume that Go is installed in /usr/local; this may vary on your system.
@@ -26,10 +26,10 @@ git clone https://go.googlesource.com/go
 cd go
 git checkout release-branch.go1.12
 # Apply the patch.
-git fetch https://go.googlesource.com/go refs/changes/17/159117/3 && git cherry-pick FETCH_HEAD
+git fetch https://go.googlesource.com/go refs/changes/17/159117/5 && git cherry-pick FETCH_HEAD
 # Update the version.
 echo "go1.12-runtime-patch" > VERSION
-# Build the patched runtime.
+# Build the runtime.
 cd src
 GOROOT_BOOTSTRAP=/usr/local/go1.12/ ./make.bash
 # Verify that the installed binary matches the custom version (i.e. 'go version go1.12-dev-runtime darwin/amd64').
