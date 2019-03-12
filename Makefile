@@ -9,8 +9,8 @@ LDFLAGS='-s -w'
 IMPORT_PATH=github.com/Jigsaw-Code/go-tun2socks-mobile
 TUN2SOCKS_PATH=$(GOPATH)/src/github.com/eycorsican/go-tun2socks
 
-IOS_BUILD_CMD="cd $(BUILDDIR) && $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios -tags ios -o $(IOS_ARTIFACT) $(IMPORT_PATH)"
-ANDROID_BUILD_CMD="cd $(BUILDDIR) && $(GOBIND) -a -ldflags $(LDFLAGS) -target=android -tags android -o $(ANDROID_ARTIFACT) $(IMPORT_PATH)"
+IOS_BUILD_CMD="cd $(BUILDDIR) && $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios -tags ios -o $(IOS_ARTIFACT) $(IMPORT_PATH)/ios"
+ANDROID_BUILD_CMD="cd $(BUILDDIR) && $(GOBIND) -a -ldflags $(LDFLAGS) -target=android -tags android -o $(ANDROID_ARTIFACT) $(IMPORT_PATH)/android"
 
 define build
 	mkdir -p $(1)
@@ -18,6 +18,8 @@ define build
 	eval $(2)
 	cd $(TUN2SOCKS_PATH) && make clean
 endef
+
+.PHONY: android ios clean
 
 all: android ios
 

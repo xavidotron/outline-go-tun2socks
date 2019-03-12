@@ -19,7 +19,9 @@ BIN_DIR=bin/ios
 TUN2SOCKS_FRAMEWORK=Tun2socks.framework
 
 rm -rf $BUILD_DIR
+# pushd ios > /dev/null
 make clean && make ios
+# popd > /dev/null
 pushd $BUILD_DIR/$TUN2SOCKS_FRAMEWORK > /dev/null
 
 # Get the framework in the correct format.
@@ -27,9 +29,9 @@ pushd $BUILD_DIR/$TUN2SOCKS_FRAMEWORK > /dev/null
 rm Headers Modules Resources Tun2socks
 mv Versions/A/* .
 rm -rf Versions Resources
-pushd > /dev/null
+popd > /dev/null
 
 # Add Info.plist
-cp Info.plist $BUILD_DIR/$TUN2SOCKS_FRAMEWORK/
+cp ios/Info.plist $BUILD_DIR/$TUN2SOCKS_FRAMEWORK/
 
 cp -R $BUILD_DIR/$TUN2SOCKS_FRAMEWORK $BIN_DIR/
