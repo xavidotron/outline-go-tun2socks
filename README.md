@@ -1,6 +1,6 @@
-# go-tun2socks-mobile
+# outline-go-tun2socks
 
-Go package for building and using `go-tun2socks` as a library on iOS and Android.
+Go package for building and using `go-tun2socks` for macOS, iOS and Android.
 
 ## Prerequisites
 
