@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/eycorsican/go-tun2socks/common/dns/cache"
 	"github.com/eycorsican/go-tun2socks/core"
-	"github.com/eycorsican/go-tun2socks/proxy"
 
 	"github.com/eycorsican/go-tun2socks/proxy/socks"
 )
@@ -22,8 +22,8 @@ func StartSocks(fd int, proxyHost string, proxyPort int) {
 		log.Println("Failed to open tun file descriptor")
 		return
 	}
-	core.RegisterTCPConnectionHandler(socks.NewTCPHandler(proxyHost, uint16(proxyPort)))
-	core.RegisterUDPConnectionHandler(socks.NewUDPHandler(proxyHost, uint16(proxyPort), 30*time.Second, proxy.NewDNSCache()))
+	core.RegisterTCPConnHandler(socks.NewTCPHandler(proxyHost, uint16(proxyPort)))
+	core.RegisterUDPConnHandler(socks.NewUDPHandler(proxyHost, uint16(proxyPort), 30*time.Second, cache.NewSimpleDnsCache()))
 	core.RegisterOutputFn(func(data []byte) (int, error) {
 		return tun.Write(data)
 	})
