@@ -50,7 +50,7 @@ Until we upstream the change, the binary to enable this behavior is located at `
     # Temporarily rename the installed gomobile.
     mv ~/go/bin/gomobile ~/go/bin/gomobile-prod
     # Copy the patched gomobile binary.
-    ln -s tools/gomobile ~/go/bin/gomobile
+    ln -s `pwd`/tools/gomobile ~/go/bin/gomobile
     # Initialize gomobile.
     gomobile init
     # Build the macOS framework.
@@ -63,5 +63,5 @@ Until we upstream the change, the binary to enable this behavior is located at `
 ## Build
 ```bash
 go get -d ./...
-./build_[ios|android].sh
+./build_[ios|android|macos].sh
 ```
