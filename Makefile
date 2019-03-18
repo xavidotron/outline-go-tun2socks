@@ -5,7 +5,7 @@ GOBUILD=$(GOCMD) build
 BUILDDIR=$(shell pwd)/build
 IMPORT_PATH=github.com/Jigsaw-Code/outline-go-tun2socks
 LDFLAGS='-s -w'
-TUN2SOCKS_VERSION=v1.12.0
+TUN2SOCKS_VERSION=v1.13.0
 TUN2SOCKS_SRC_PATH=$(GOPATH)/src/github.com/eycorsican/go-tun2socks
 TUN2SOCKS_MOD_PATH=$(GOPATH)/pkg/mod/github.com/eycorsican/go-tun2socks\@$(TUN2SOCKS_VERSION)
 

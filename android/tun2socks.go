@@ -22,8 +22,8 @@ func StartSocks(fd int, proxyHost string, proxyPort int) {
 		log.Println("Failed to open tun file descriptor")
 		return
 	}
-	core.RegisterTCPConnHandler(socks.NewTCPHandler(proxyHost, uint16(proxyPort)))
-	core.RegisterUDPConnHandler(socks.NewUDPHandler(proxyHost, uint16(proxyPort), 30*time.Second, cache.NewSimpleDnsCache()))
+	core.RegisterTCPConnHandler(socks.NewTCPHandler(proxyHost, uint16(proxyPort), nil))
+	core.RegisterUDPConnHandler(socks.NewUDPHandler(proxyHost, uint16(proxyPort), 30*time.Second, cache.NewSimpleDnsCache(), nil))
 	core.RegisterOutputFn(func(data []byte) (int, error) {
 		return tun.Write(data)
 	})

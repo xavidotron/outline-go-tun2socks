@@ -38,8 +38,8 @@ func InputPacket(data []byte) {
 func StartSocks(packetFlow PacketFlow, proxyHost string, proxyPort int) {
 	if packetFlow != nil {
 		lwipStack = core.NewLWIPStack()
-		core.RegisterTCPConnHandler(socks.NewTCPHandler(proxyHost, uint16(proxyPort)))
-		core.RegisterUDPConnHandler(socks.NewUDPHandler(proxyHost, uint16(proxyPort), 30*time.Second, cache.NewSimpleDnsCache()))
+		core.RegisterTCPConnHandler(socks.NewTCPHandler(proxyHost, uint16(proxyPort), nil))
+		core.RegisterUDPConnHandler(socks.NewUDPHandler(proxyHost, uint16(proxyPort), 30*time.Second, cache.NewSimpleDnsCache(), nil))
 		core.RegisterOutputFn(func(data []byte) (int, error) {
 			packetFlow.WritePacket(data)
 			return len(data), nil
