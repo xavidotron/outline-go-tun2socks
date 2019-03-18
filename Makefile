@@ -14,12 +14,11 @@ ANDROID_ARTIFACT=$(ANDROID_BUILDDIR)/tun2socks.aar
 IOS_BUILDDIR=$(BUILDDIR)/ios
 IOS_ARTIFACT=$(IOS_BUILDDIR)/Tun2socks.framework
 MACOS_BUILDDIR=$(BUILDDIR)/macos
-MACOS_IMPORT_PATH=$(IMPORT_PATH)/macos
-MACOS_ARTIFACT=$(MACOS_BUILDDIR)/go-tun2socks-macos
+MACOS_ARTIFACT=$(MACOS_BUILDDIR)/Tun2socks.framework
 
 ANDROID_BUILD_CMD="cd $(BUILDDIR) && GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -target=android -tags android -o $(ANDROID_ARTIFACT) $(IMPORT_PATH)/android"
-IOS_BUILD_CMD="cd $(BUILDDIR) &&  GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios -tags ios -o $(IOS_ARTIFACT) $(IMPORT_PATH)/ios"
-MACOS_BUILD_CMD="cd $(BUILDDIR) && $(GOBUILD) -ldflags $(LDFLAGS) -o $(MACOS_ARTIFACT) $(MACOS_IMPORT_PATH)"
+IOS_BUILD_CMD="cd $(BUILDDIR) &&  GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios/arm,ios/arm64 -tags ios -o $(IOS_ARTIFACT) $(IMPORT_PATH)/apple"
+MACOS_BUILD_CMD="cd $(BUILDDIR) &&  GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios/amd64 -tags ios -o $(MACOS_ARTIFACT) $(IMPORT_PATH)/apple"
 
 define build
 	$(call modularize)

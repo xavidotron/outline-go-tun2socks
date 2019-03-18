@@ -30,6 +30,6 @@ rm -rf Versions Resources
 popd > /dev/null
 
 # Add Info.plist
-cp ios/Info.plist $BUILD_DIR/$TUN2SOCKS_FRAMEWORK/
+cp apple/Info.plist $BUILD_DIR/$TUN2SOCKS_FRAMEWORK/
 
 cp -R $BUILD_DIR/$TUN2SOCKS_FRAMEWORK $BIN_DIR/

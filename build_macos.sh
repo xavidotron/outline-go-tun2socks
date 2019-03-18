@@ -16,11 +16,13 @@
 
 BUILD_DIR=build/macos
 BIN_DIR=bin/macos
-TUN2SOCKS_BINARY=$BUILD_DIR/go-tun2socks-macos
-# TODO: use Jigsaw developer certificate
-CERT_NAME="Mac Developer: Alberto Lalama (6U3H9CUW4N)"
+TUN2SOCKS_FRAMEWORK=Tun2socks.framework
+
 
 rm -rf $BUILD_DIR
 make clean && make macos
-codesign -f --prefix org.outline. --entitlements macos/go-tun2socks-macos.entitlements -s "$CERT_NAME" $TUN2SOCKS_BINARY
-cp -R $TUN2SOCKS_BINARY $BIN_DIR/
+# Add Info.plist
+cp apple/Info.plist $BUILD_DIR/$TUN2SOCKS_FRAMEWORK/Versions/A/Resources/
+
+rm -rf $BIN_DIR/$TUN2SOCKS_FRAMEWORK
+cp -R $BUILD_DIR/$TUN2SOCKS_FRAMEWORK $BIN_DIR/
