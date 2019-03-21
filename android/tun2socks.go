@@ -1,49 +1,66 @@
 package tun2socks
 
 import (
+	"errors"
 	"log"
 	"os"
-	"time"
 
-	"github.com/eycorsican/go-tun2socks/common/dns/cache"
+	"github.com/Jigsaw-Code/outline-go-tun2socks/common"
 	"github.com/eycorsican/go-tun2socks/core"
-
-	"github.com/eycorsican/go-tun2socks/proxy/socks"
 )
+
+const vpnMtu = 1500
 
 var lwipStack core.LWIPStack
 var tun *os.File
+var config *common.ConnectionConfig
 var isRunning = false
 
-func StartSocks(fd int, proxyHost string, proxyPort int) {
+func StartSocks(fd int, proxyHost string, proxyPort int, isUDPSupported bool) error {
 	lwipStack = core.NewLWIPStack()
 	tun = os.NewFile(uintptr(fd), "")
 	if tun == nil {
-		log.Println("Failed to open tun file descriptor")
-		return
+		return errors.New("Failed to open tun file descriptor")
 	}
-	core.RegisterTCPConnHandler(socks.NewTCPHandler(proxyHost, uint16(proxyPort), nil))
-	core.RegisterUDPConnHandler(socks.NewUDPHandler(proxyHost, uint16(proxyPort), 30*time.Second, cache.NewSimpleDnsCache(), nil))
+	config = &common.ConnectionConfig{
+		Host: proxyHost, Port: uint16(proxyPort), IsUDPSupported: isUDPSupported}
+	common.RegisterConnectionHandlers(config)
 	core.RegisterOutputFn(func(data []byte) (int, error) {
 		return tun.Write(data)
 	})
 	isRunning = true
 	go processInputPackets()
+	return nil
 }
 
 func StopSocks() {
 	isRunning = false
+	if tun != nil {
+		tun.Close()
+	}
 	if lwipStack != nil {
 		lwipStack.Close()
 	}
 }
 
+func SetUDPSupport(isUDPSupported bool) error {
+	if config.IsUDPSupported == isUDPSupported {
+		return nil
+	}
+	config.IsUDPSupported = isUDPSupported
+	if lwipStack != nil {
+		lwipStack.Close() // Abort existing connections
+	}
+	lwipStack = core.NewLWIPStack()
+	return common.RegisterConnectionHandlers(config)
+}
+
 func processInputPackets() {
-	buffer := make([]byte, 1500)
+	buffer := make([]byte, vpnMtu)
 	for isRunning {
 		len, err := tun.Read(buffer)
 		if err != nil {
-			log.Println("Failed to read packet from TUN")
+			log.Printf("Failed to read packet from TUN: %v", err)
 			continue
 		}
 		if len == 0 {
