@@ -2,19 +2,24 @@ package tun2socks
 
 import (
 	"errors"
+	"io"
 	"runtime/debug"
 	"time"
 
-	"github.com/Jigsaw-Code/outline-go-tun2socks/common"
-	"github.com/eycorsican/go-tun2socks/core"
+	"github.com/Jigsaw-Code/outline-go-tun2socks/tun2socks"
 )
 
-type PacketFlow interface {
-	WritePacket(packet []byte)
+// AppleTunnel embeds the tun2socks.Tunnel interface so it gets exported by gobind.
+type AppleTunnel interface {
+	tun2socks.Tunnel
 }
 
-var lwipStack core.LWIPStack
-var config *common.ConnectionConfig
+// TunWriter is an interface that allows for outputting packets to the TUN (VPN).
+type TunWriter interface {
+	io.WriteCloser
+}
+
+var tunnel AppleTunnel
 
 func init() {
 	// Apple VPN extensions have a memory limit of 15MB. Conserve memory by increasing garbage
@@ -28,43 +33,20 @@ func init() {
 	}()
 }
 
-func InputPacket(data []byte) {
-	if lwipStack != nil {
-		lwipStack.Write(data)
+// ConnectSocksTunnel reads packets from a TUN device and routes it to a SOCKS server. Returns an
+// AppleTunnel instance that should be used to input packets to the tunnel.
+//
+// `tunWriter` is used to output packets to the TUN (VPN).
+// `host` is  IP address of the SOCKS proxy server.
+// `port` is the port of the SOCKS proxy server.
+// `isUDPEnabled` indicates whether the tunnel and/or network enable UDP proxying.
+//
+// Sets an error if the tunnel fails to connect.
+func ConnectSocksTunnel(tunWriter TunWriter, host string, port int, isUDPEnabled bool) (AppleTunnel, error) {
+	if tunWriter == nil || host == "" || port <= 0 {
+		return nil, errors.New("Must provide a TunWriter, a valid SOCKS proxy host and port")
 	}
-}
-
-func StartSocks(packetFlow PacketFlow, proxyHost string, proxyPort int, isUDPSupported bool) error {
-	if packetFlow == nil || proxyHost == "" || proxyPort <= 0 {
-		return errors.New("Must provide a PacketFlow instance, valid proxy host and port")
-	}
-	config = &common.ConnectionConfig{
-		Host: proxyHost, Port: uint16(proxyPort), IsUDPSupported: isUDPSupported}
-	lwipStack = core.NewLWIPStack()
-	common.RegisterConnectionHandlers(config)
-	core.RegisterOutputFn(func(data []byte) (int, error) {
-		packetFlow.WritePacket(data)
-		return len(data), nil
-	})
-	return nil
-}
-
-func StopSocks() {
-	if lwipStack != nil {
-		lwipStack.Close()
-	}
-	lwipStack = nil
-	config = nil
-}
-
-func SetUDPSupport(isUDPSupported bool) error {
-	if config.IsUDPSupported == isUDPSupported {
-		return nil
-	}
-	config.IsUDPSupported = isUDPSupported
-	if lwipStack != nil {
-		lwipStack.Close() // Abort existing connections
-	}
-	lwipStack = core.NewLWIPStack()
-	return common.RegisterConnectionHandlers(config)
+	var err error
+	tunnel, err = tun2socks.NewTunnel(host, uint16(port), isUDPEnabled, tunWriter)
+	return tunnel, err
 }
