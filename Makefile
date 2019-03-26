@@ -15,10 +15,12 @@ IOS_BUILDDIR=$(BUILDDIR)/ios
 IOS_ARTIFACT=$(IOS_BUILDDIR)/Tun2socks.framework
 MACOS_BUILDDIR=$(BUILDDIR)/macos
 MACOS_ARTIFACT=$(MACOS_BUILDDIR)/Tun2socks.framework
+WINDOWS_BUILDDIR=$(BUILDDIR)/windows
 
 ANDROID_BUILD_CMD="cd $(BUILDDIR) && GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -target=android -tags android -o $(ANDROID_ARTIFACT) $(IMPORT_PATH)/android"
 IOS_BUILD_CMD="cd $(BUILDDIR) &&  GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios/arm,ios/arm64 -tags ios -o $(IOS_ARTIFACT) $(IMPORT_PATH)/apple"
 MACOS_BUILD_CMD="cd $(BUILDDIR) &&  GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios/amd64 -tags ios -o $(MACOS_ARTIFACT) $(IMPORT_PATH)/apple"
+WINDOWS_BUILD_CMD="cd $(TUN2SOCKS_SRC_PATH) && go get -d ./... && BUILD_TAGS='dnscache dnsfallback socks' make windows && cp build/tun2socks-windows*.exe $(WINDOWS_BUILDDIR)/"
 
 define build
 	$(call modularize)
@@ -48,9 +50,9 @@ define undo_modularize
 	rm $(TUN2SOCKS_SRC_PATH) || true
 endef
 
-.PHONY: android ios macos clean
+.PHONY: android ios macos windows clean
 
-all: android ios macos
+all: android ios macos windows
 
 android:
 	$(call build,$(ANDROID_BUILDDIR),$(ANDROID_BUILD_CMD))
@@ -60,6 +62,9 @@ ios:
 
 macos:
 	$(call build,$(MACOS_BUILDDIR),$(MACOS_BUILD_CMD))
+
+windows:
+	$(call build,$(WINDOWS_BUILDDIR),$(WINDOWS_BUILD_CMD))
 
 clean:
 	rm -rf $(BUILDDIR)
