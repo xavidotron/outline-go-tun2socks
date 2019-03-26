@@ -19,7 +19,7 @@ type Tunnel interface {
 	SetUDPEnabled(isUDPEnabled bool)
 	// Disconnect disconnects the tunnel.
 	Disconnect()
-	// Write writes input data to the TUN inerface.
+	// Write writes input data to the TUN interface.
 	Write(data []byte) (int, error)
 }
 
