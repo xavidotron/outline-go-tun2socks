@@ -2,10 +2,11 @@ GOCMD=go
 GOMOBILE=gomobile
 GOBIND=$(GOMOBILE) bind
 GOBUILD=$(GOCMD) build
+XGOCMD=xgo
 BUILDDIR=$(shell pwd)/build
 IMPORT_PATH=github.com/Jigsaw-Code/outline-go-tun2socks
 LDFLAGS='-s -w'
-TUN2SOCKS_VERSION=v1.13.0
+TUN2SOCKS_VERSION=v1.13.2
 TUN2SOCKS_SRC_PATH=$(GOPATH)/src/github.com/eycorsican/go-tun2socks
 TUN2SOCKS_MOD_PATH=$(GOPATH)/pkg/mod/github.com/eycorsican/go-tun2socks\@$(TUN2SOCKS_VERSION)
 
@@ -16,27 +17,23 @@ IOS_ARTIFACT=$(IOS_BUILDDIR)/Tun2socks.framework
 MACOS_BUILDDIR=$(BUILDDIR)/macos
 MACOS_ARTIFACT=$(MACOS_BUILDDIR)/Tun2socks.framework
 WINDOWS_BUILDDIR=$(BUILDDIR)/windows
+WINDOWS_ARTIFACT=$(WINDOWS_BUILDDIR)/tun2socks.exe
+WINDOWS_LDFLAGS='-s -w -X main.version=$(TUN2SOCKS_VERSION)'
 
-ANDROID_BUILD_CMD="cd $(BUILDDIR) && GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -target=android -tags android -o $(ANDROID_ARTIFACT) $(IMPORT_PATH)/android"
-IOS_BUILD_CMD="cd $(BUILDDIR) &&  GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios/arm,ios/arm64 -tags ios -o $(IOS_ARTIFACT) $(IMPORT_PATH)/apple"
-MACOS_BUILD_CMD="cd $(BUILDDIR) &&  GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios/amd64 -tags ios -o $(MACOS_ARTIFACT) $(IMPORT_PATH)/apple"
-WINDOWS_BUILD_CMD="cd $(TUN2SOCKS_SRC_PATH) && go get -d ./... && BUILD_TAGS='dnscache dnsfallback socks' make windows && cp build/tun2socks-windows*.exe $(WINDOWS_BUILDDIR)/"
+ANDROID_BUILD_CMD="GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -target=android -tags android -o $(ANDROID_ARTIFACT) $(IMPORT_PATH)/android"
+IOS_BUILD_CMD="GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios/arm,ios/arm64 -tags ios -o $(IOS_ARTIFACT) $(IMPORT_PATH)/apple"
+MACOS_BUILD_CMD="GO111MODULE=off $(GOBIND) -a -ldflags $(LDFLAGS) -bundleid org.outline.tun2socks -target=ios/amd64 -tags ios -o $(MACOS_ARTIFACT) $(IMPORT_PATH)/apple"
+WINDOWS_BUILD_CMD="$(XGOCMD) -ldflags $(WINDOWS_LDFLAGS) -tags 'dnscache dnsfallback socks' --targets=windows/386 -dest $(WINDOWS_BUILDDIR) $(TUN2SOCKS_SRC_PATH)/cmd/tun2socks"
 
 define build
 	$(call modularize)
 	mkdir -p $(1)
-	cd $(TUN2SOCKS_MOD_PATH) && make copy
 	eval $(2)
-	cd $(TUN2SOCKS_MOD_PATH) && make clean
 	$(call undo_modularize)
 endef
 
 # Workaround to modularize go-tun2socks and gomobile.
 define modularize
-	# We need to call `make copy` in go-tun2socks, but the downloaded
-	# module does not grant us write permissions.
-	# TODO: add module support in go-tun2socks upstream.
-	chmod -R u+w $(TUN2SOCKS_MOD_PATH)
 	# gomobile does not yet support modules.
 	# Symlink the current module and the go-tun2socks module in $GOPATH.
 	# go-tun2socks should not be in $GOPATH for this to work.
@@ -68,5 +65,4 @@ windows:
 
 clean:
 	rm -rf $(BUILDDIR)
-	cd $(TUN2SOCKS_MOD_PATH) && make clean || true
 	$(call undo_modularize)
