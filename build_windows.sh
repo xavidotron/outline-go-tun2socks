@@ -19,4 +19,4 @@ BIN_DIR=bin/windows
 
 rm -rf $BUILD_DIR
 make clean && make windows
-cp $(BUILD_DIR)/tun2socks-windows-4.0-386.exe bin/windows/tun2socks.exe
+cp $BUILD_DIR/tun2socks-windows-4.0-386.exe bin/windows/tun2socks.exe
