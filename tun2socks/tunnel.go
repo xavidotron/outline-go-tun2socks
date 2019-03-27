@@ -8,7 +8,7 @@ import (
 	"github.com/eycorsican/go-tun2socks/common/dns/cache"
 	"github.com/eycorsican/go-tun2socks/core"
 	"github.com/eycorsican/go-tun2socks/proxy/dnsfallback"
-	"github.com/eycorsican/go-tun2socks/proxy/socks"
+	"github.com/eycorsican/go-tun2socks/proxy/shadowsocks"
 )
 
 // Tunnel represents a tunnel from a TUN device to a server.
@@ -26,6 +26,7 @@ type Tunnel interface {
 type tunnel struct {
 	host         string
 	port         uint16
+	password     string
 	isConnected  bool
 	isUDPEnabled bool
 	lwipStack    core.LWIPStack
@@ -38,7 +39,7 @@ type tunnel struct {
 // `port` is the port of the SOCKS server.
 // `isUDPEnabled` indicates if the SOCKS server and the network support proxying UDP traffic.
 // `tunWriter` is used to output packets back to the TUN device.
-func NewTunnel(host string, port uint16, isUDPEnabled bool, tunWriter io.WriteCloser) (Tunnel, error) {
+func NewTunnel(host string, port uint16, password string, isUDPEnabled bool, tunWriter io.WriteCloser) (Tunnel, error) {
 	if host == "" || port <= 0 || tunWriter == nil {
 		return nil, errors.New("Must provide a host, port, and TUN writer")
 	}
@@ -46,7 +47,7 @@ func NewTunnel(host string, port uint16, isUDPEnabled bool, tunWriter io.WriteCl
 	core.RegisterOutputFn(func(data []byte) (int, error) {
 		return tunWriter.Write(data)
 	})
-	t := &tunnel{host: host, port: port, isUDPEnabled: isUDPEnabled, lwipStack: lwipStack,
+	t := &tunnel{host: host, port: port, password: password, isUDPEnabled: isUDPEnabled, lwipStack: lwipStack,
 		tunWriter: tunWriter, isConnected: true}
 	t.registerConnectionHandlers()
 	return t, nil
@@ -84,13 +85,14 @@ func (t *tunnel) Write(data []byte) (int, error) {
 // Registers UDP and TCP SOCKS connection handlers to the tunnel's host and port.
 // Registers a DNS/TCP fallback UDP handler when UDP is disabled.
 func (t *tunnel) registerConnectionHandlers() {
+	proxyCipher := "AEAD_CHACHA20_POLY1305"
 	var udpHandler core.UDPConnHandler
 	if t.isUDPEnabled {
-		udpHandler = socks.NewUDPHandler(
-			t.host, t.port, 30*time.Second, cache.NewSimpleDnsCache(), nil)
+		udpHandler = shadowsocks.NewUDPHandler(
+			core.ParseTCPAddr(t.host, t.port).String(), proxyCipher, t.password, 30*time.Second, cache.NewSimpleDnsCache(), nil)
 	} else {
 		udpHandler = dnsfallback.NewUDPHandler()
 	}
-	core.RegisterTCPConnHandler(socks.NewTCPHandler(t.host, t.port, nil))
+	core.RegisterTCPConnHandler(shadowsocks.NewTCPHandler(core.ParseTCPAddr(t.host, t.port).String(), proxyCipher, t.password, nil))
 	core.RegisterUDPConnHandler(udpHandler)
 }

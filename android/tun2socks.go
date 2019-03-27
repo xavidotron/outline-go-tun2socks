@@ -29,7 +29,7 @@ type AndroidTunnel interface {
 //
 // Throws an exception if the TUN file descriptor cannot be opened, or if the tunnel fails to
 // connect.
-func ConnectSocksTunnel(fd int, host string, port int, isUDPEnabled bool) (AndroidTunnel, error) {
+func ConnectShadowsocksTunnel(fd int, host string, port int, password string, isUDPEnabled bool) (AndroidTunnel, error) {
 	if fd < 0 {
 		return nil, errors.New("Must provide a valid TUN file descriptor")
 	}
@@ -38,7 +38,7 @@ func ConnectSocksTunnel(fd int, host string, port int, isUDPEnabled bool) (Andro
 		return nil, errors.New("Failed to open TUN file descriptor")
 	}
 	var err error
-	tunnel, err = tun2socks.NewTunnel(host, uint16(port), isUDPEnabled, tun)
+	tunnel, err = tun2socks.NewTunnel(host, uint16(port), password, isUDPEnabled, tun)
 	if err != nil {
 		return nil, err
 	}
